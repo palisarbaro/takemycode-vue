@@ -33,21 +33,18 @@ export default {
   methods: {
     onScroll ({ target: { scrollTop, clientHeight, scrollHeight } }) {
       if (scrollTop + clientHeight >= scrollHeight) {
-        this.nextPage()
+        this.updateOptions()
       }
     },
     onClick (option) {
       option.selected = !option.selected
-      Save(this.options)
+      Save(this.options).catch(err => { if (err) throw err })
     },
     async onSearch (query) {
       this.locked = query !== ''
       this.searchInput = query
       this.page = 0
       this.options = []
-      await this.updateOptions()
-    },
-    async nextPage () {
       await this.updateOptions()
     },
     async updateOptions () {
@@ -57,9 +54,7 @@ export default {
         if (options.length > 0) {
           this.page += 1
         }
-      } catch (e) {
-        if (e) throw e
-      }
+      } catch (e) { if (e) throw e }
     }
   },
   watch: {
@@ -67,12 +62,8 @@ export default {
       async handler (newValue, oldValue) {
         if (JSON.stringify(oldValue) !== JSON.stringify(newValue) && this.searchInput === '') {
           try {
-            Save(this.options)
-          } catch (e) {
-            if (e) {
-              throw e
-            }
-          }
+            await Save(this.options)
+          } catch (e) { if (e) { throw e } }
         }
       },
       deep: true,
